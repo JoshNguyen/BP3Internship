@@ -20,7 +20,6 @@ public static void main(String[] args){
 		
 		JSONArray a = (JSONArray) parser.parse(new FileReader("task.json"));
 		Scanner input = new Scanner(System.in);
-		boolean finished = false;
 		
 
 		System.out.print("Enter instance ID to count the number of tasks: ");
@@ -38,6 +37,13 @@ public static void main(String[] args){
         		" to return the number of open and closed tasks that day: ");
         String inDate = input.next();
         findOpenClose(a, inDate);
+        
+        System.out.print("Enter a start date in the form YYYY-MM-DDTHH:mm:ssZ: ");
+        String start = input.next();
+        System.out.print("Enter an end date in the form YYYY-MM-DDTHH:mm:ssZ: ");
+        String end = input.next();
+        allOpenClosedInRange(a, start, end);
+        
         
       input.close();
 
@@ -188,6 +194,83 @@ public static void findOpenClose(JSONArray a, String s){
 	System.out.println("Number of open tasks given this date: " + open);
 	System.out.println("Number of closed tasks given this date " + closed + "\n");
 	
+}
+
+//This function will determine whether a task was open or closed in a particular date range
+//provided by the user
+//pre: valid date range entered, proper JSONArray built
+//post: prints number of tasks created or closed in date range
+//param: JSONArray a, string start and end date
+public static void allOpenClosedInRange(JSONArray a, String start, String end){
+
+   int openResult = 0;
+   int closeResult = 0;
+   String beginDate = start;
+   String endDate = end;
+   String currentBegin = null;
+   String currentEnd = null;
+   Date begin = null;
+   Date ending = null;
+   Date createDate = null;
+   Date closeDate = null;
+   
+   SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+   
+   try {
+		begin = sdf.parse(beginDate);
+		//System.out.println(sdf.format(begin));
+	} catch (java.text.ParseException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+	
+   try {
+		ending = sdf.parse(endDate);
+		//System.out.println(sdf.format(ending));
+	} catch (java.text.ParseException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+   
+    for (Object o : a){
+    	
+    	JSONObject jsonObject = (JSONObject) o;
+    	
+    	currentBegin = (String) jsonObject.get("createDate");
+    	   try {
+    			createDate = sdf.parse(currentBegin);
+    			//System.out.println(sdf.format(createDate));
+    		} catch (java.text.ParseException e) {
+    			// TODO Auto-generated catch block
+    			e.printStackTrace();
+    		}
+    	
+       	currentEnd = (String) jsonObject.get("closeDate");
+ 	   try {
+			if (currentEnd != null){
+ 			closeDate = sdf.parse(currentEnd);
+ 			//System.out.println(sdf.format(closeDate));
+			}
+ 		} catch (java.text.ParseException e) {
+ 			// TODO Auto-generated catch block
+ 			e.printStackTrace();
+ 		}
+    	
+ 	   
+ 	   
+ 	     if (createDate.compareTo(begin) > 0 && createDate.compareTo(ending) < 0){
+ 	    	 openResult++;
+ 	     }
+ 	     
+ 	     if (currentEnd != null && closeDate.compareTo(begin) > 0 && closeDate.compareTo(ending) < 0){
+ 	    	 closeResult++;
+ 	     }
+    }
+    
+    System.out.println("Number of tasks opened in this range: " + openResult);
+    System.out.println("Number of tasks closed in this range: " + closeResult);
+   
+
 }
 
 
