@@ -1,0 +1,194 @@
+package test;
+import java.io.FileNotFoundException;
+import java.util.*;
+import java.text.SimpleDateFormat;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Iterator;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+public class testing {
+
+public static void main(String[] args){
+	
+    JSONParser parser = new JSONParser();
+
+	try {
+		
+		JSONArray a = (JSONArray) parser.parse(new FileReader("task.json"));
+		Scanner input = new Scanner(System.in);
+		boolean finished = false;
+		
+
+		System.out.print("Enter instance ID to count the number of tasks: ");
+		long instanceId;
+		instanceId = input.nextLong();
+        countTasks(a, instanceId);
+        
+        
+        System.out.print("Enter instance ID to return the name of the most recent task with matching ID: ");
+        Long matchId = input.nextLong();
+        findTask(a, matchId);
+        
+        
+        System.out.print("Enter a date in the form YYYY-MM-DDTHH:mm:ssZ" +
+        		" to return the number of open and closed tasks that day: ");
+        String inDate = input.next();
+        findOpenClose(a, inDate);
+        
+      input.close();
+
+	} catch (ParseException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	} catch (FileNotFoundException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	} catch (IOException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+
+}
+	
+
+//This method counts the number of tasks given an instance ID
+//pre:valid JSONArray and instanceId entered
+//post: returns an int representing number of tasks
+//param: JSONArray generated from valid document, long ID that user inputs
+public static int countTasks(JSONArray a, long instanceId){	
+	
+  int count = 0;
+	
+  for (Object o: a){
+   JSONObject jsonObject =  (JSONObject) o;
+   Long id = (Long) jsonObject.get("instanceId");
+   if (id == instanceId){
+	  count++;
+  }
+	
+	}
+ System.out.print("Total number of tasks with that ID: ");
+ System.out.println(count + "\n");
+ return count;
+}
+
+
+//This function finds the most recent task given an instance id
+//pre: valid id given, valid JSONArray built
+//post: returns appropriate date for id, prints name
+//param: JSONArray a, and Long id that user inputs
+public static String findTask(JSONArray a, Long id){
+	String result = null;
+	String str = null;
+	Date dateCurrent;
+	Date dateResult = null;
+	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+	Long currentID;
+
+	
+
+	for (Object o : a){
+	 
+	 
+	 JSONObject jsonObject = (JSONObject) o;
+	 str = (String) jsonObject.get("createDate");
+	 currentID = (Long) jsonObject.get("instanceId");
+	 
+	 if (currentID.compareTo(id) == 0){
+	 //parsing the createDate string into a comparable date and then comparing
+	 try {
+		dateCurrent = sdf.parse(str);
+		//System.out.println("Date: " + sdf.format(dateCurrent));
+		
+		if (dateResult == null){
+			dateResult = dateCurrent;
+			result = (String) jsonObject.get("name");
+		}
+		else{
+			if (dateCurrent.compareTo(dateResult) > 0){
+				dateResult = dateCurrent;
+				result = (String) jsonObject.get("name");
+			}
+		}
+	} catch (java.text.ParseException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+	 
+	}
+	}
+	System.out.println("Most recent date with that instance ID: " +sdf.format(dateResult));
+	System.out.println("Corresponding name: " + result + "\n");
+	return result;
+}
+
+//this function prints the number of open and closed tasks given a date
+//pre: valid date input, valid JSONArray built
+//post: prints tasks open/closed on a day inclusively
+//param: valid string representing date from user, JSONArray a
+//For this function, I'm assuming that any task with 'null' as a closing
+//date indicates that it is still open and will always be counted as open
+//given any date at all. I also am assuming that a task is considered open
+//if the given date is before the close date of that task.
+public static void findOpenClose(JSONArray a, String s){
+	
+	int open = 0;
+	int closed = 0;
+	
+	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+	String dateFormat = s;
+	String closeDate;
+	Date userDate = null;
+	Date currentDate = null;
+	
+	try {
+		userDate = sdf.parse(dateFormat);
+		System.out.println(sdf.format(userDate));
+	} catch (java.text.ParseException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+	
+
+	
+	for (Object o : a){
+		
+		JSONObject jsonObject = (JSONObject) o;
+		closeDate = (String) jsonObject.get("closeDate");
+		
+		//parse the close date to compare to the user date
+		if (closeDate != null){
+		try {
+			currentDate = sdf.parse(closeDate);
+			//System.out.println(sdf.format(currentDate));
+			
+			if (currentDate.compareTo(userDate) > 0){
+				open++;
+			}
+			else{
+				closed++;
+			}
+			
+		} catch (java.text.ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		}
+		
+		//other case where closeDate = null so it must be open no matter what
+		else{
+			open++;
+		}
+	}
+	System.out.println("Number of open tasks given this date: " + open);
+	System.out.println("Number of closed tasks given this date " + closed + "\n");
+	
+}
+
+
+}
